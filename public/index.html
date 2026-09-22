@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Private Chat</title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+<div class="login-page">
+
+    <div class="login-card">
+
+        <div class="logo">
+            💬
+        </div>
+
+        <h1>
+            Private Chat
+        </h1>
+
+        <p class="subtitle">
+            Enter your chat details
+        </p>
+
+        <form id="loginForm">
+
+            <label>
+                Name
+            </label>
+
+            <input
+                id="userName"
+                type="text"
+                placeholder="Your name"
+                maxlength="30"
+                required
+            >
+
+            <label>
+                Chat ID
+            </label>
+
+            <input
+                id="userId"
+                type="text"
+                inputmode="numeric"
+                maxlength="8"
+                placeholder="4–8 digit ID"
+                required
+            >
+
+            <label>
+                Password
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                placeholder="Password"
+                required
+            >
+
+            <button
+                type="submit"
+                id="loginButton"
+            >
+                Enter Chat
+            </button>
+
+        </form>
+
+        <p
+            id="loginError"
+            class="error"
+        ></p>
+
+        <div class="demo-info">
+            Use any 4–8 digit ID and password.
+            <br>
+            Use the same ID + password
+            on another device to join
+            the same chat.
+        </div>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
