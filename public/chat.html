@@ -1,21 +1,24 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
 
-    <meta charset="UTF-8">
+```
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Private Chat</title>
+<title>Private Chat</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+```
 
 </head>
 
@@ -23,85 +26,98 @@
 
 <div class="chat-container">
 
-    <!-- HEADER -->
+```
+<!-- HEADER -->
 
-    <header class="chat-header">
+<header class="chat-header">
 
-        <div>
+    <div>
 
-            <h2>💬 Private Chat</h2>
+        <h2>💬 Private Chat</h2>
 
-            <span id="deviceStatus">
-                Connecting...
-            </span>
+        <span id="deviceStatus">
+            Connecting...
+        </span>
 
-        </div>
+    </div>
 
-        <button
-            id="logoutButton"
-            class="logout-button"
-        >
-            Logout
-        </button>
+    <button
+        id="logoutButton"
+        class="logout-button"
+    >
+        Logout
+    </button>
 
-    </header>
-
-
-    <!-- MESSAGES -->
-
-    <main id="messages"></main>
+</header>
 
 
-    <!-- FILE PREVIEW -->
+<!-- MESSAGES -->
 
-    <div
-        id="filePreview"
-        class="file-preview"
-    ></div>
+<main id="messages"></main>
 
 
-    <!-- MESSAGE INPUT -->
+<!-- FILE PREVIEW -->
 
-    <form
-        id="messageForm"
-        class="message-form"
+<div
+    id="filePreview"
+    class="file-preview"
+></div>
+
+
+<!-- MESSAGE INPUT -->
+
+<form
+    id="messageForm"
+    class="message-form"
+>
+
+    <input
+        type="file"
+        id="fileInput"
+        accept="image/*,video/*"
+        hidden
     >
 
-        <input
-            type="file"
-            id="fileInput"
-            accept="image/*,video/*"
-            hidden
-        >
-
-        <button
-            type="button"
-            id="fileButton"
-            class="icon-button"
-        >
-            📎
-        </button>
+    <button
+        type="button"
+        id="fileButton"
+        class="icon-button"
+    >
+        📎
+    </button>
 
 
-        <input
-            id="messageInput"
-            type="text"
-            placeholder="Write a message..."
-            autocomplete="off"
-        >
+    <!-- AUDIO MESSAGE BUTTON -->
+
+    <button
+        type="button"
+        id="audioButton"
+        class="icon-button"
+        title="Record audio"
+    >
+        🎤
+    </button>
 
 
-        <button
-            type="submit"
-            class="send-button"
-        >
-            Send
-        </button>
+    <input
+        id="messageInput"
+        type="text"
+        placeholder="Write a message..."
+        autocomplete="off"
+    >
 
-    </form>
+
+    <button
+        type="submit"
+        class="send-button"
+    >
+        Send
+    </button>
+
+</form>
+```
 
 </div>
-
 
 <!-- SOCKET.IO -->
 
