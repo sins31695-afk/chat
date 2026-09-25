@@ -1,3 +1,4 @@
+```javascript
 // ========================================
 // LOGIN
 // ========================================
@@ -107,7 +108,6 @@ if (loginForm) {
                     await fetch(
                         "/api/login",
                         {
-
                             method:
                                 "POST",
 
@@ -187,6 +187,7 @@ if (loginForm) {
     );
 }
 
+
 // ========================================
 // CHAT PAGE
 // ========================================
@@ -224,6 +225,7 @@ if (messages) {
         );
     }
 }
+
 
 // ========================================
 // START CHAT
@@ -320,11 +322,6 @@ function startChat(
 
             addTextMessage(
                 message,
-
-                // VERY IMPORTANT
-                // Send THIS browser's
-                // socket ID
-
                 socket.id
             );
         }
@@ -379,13 +376,243 @@ function startChat(
 
             addFileMessage(
                 file,
-
-                // THIS browser's socket
-
                 socket.id
             );
         }
     );
+
+
+    // ====================================
+    // AUDIO MESSAGE
+    // ====================================
+
+    const audioButton =
+        document.getElementById(
+            "audioButton"
+        );
+
+    let mediaRecorder = null;
+
+    let audioChunks = [];
+
+    let isRecording = false;
+
+
+    if (audioButton) {
+
+        audioButton.addEventListener(
+            "click",
+            async function () {
+
+                // ----------------------------
+                // STOP RECORDING
+                // ----------------------------
+
+                if (isRecording) {
+
+                    mediaRecorder.stop();
+
+                    isRecording = false;
+
+                    audioButton.textContent =
+                        "🎤";
+
+                    audioButton.title =
+                        "Record audio";
+
+                    return;
+                }
+
+
+                // ----------------------------
+                // CHECK SUPPORT
+                // ----------------------------
+
+                if (
+                    !navigator.mediaDevices ||
+                    !navigator.mediaDevices.getUserMedia
+                ) {
+
+                    alert(
+                        "Audio recording is not supported by this browser."
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !window.MediaRecorder
+                ) {
+
+                    alert(
+                        "Audio recording is not supported by this browser."
+                    );
+
+                    return;
+                }
+
+
+                try {
+
+                    // ------------------------
+                    // MICROPHONE
+                    // ------------------------
+
+                    const stream =
+                        await navigator.mediaDevices.getUserMedia(
+                            {
+                                audio: true
+                            }
+                        );
+
+
+                    audioChunks = [];
+
+
+                    // ------------------------
+                    // RECORDER
+                    // ------------------------
+
+                    let recorderOptions = {};
+
+                    if (
+                        MediaRecorder.isTypeSupported(
+                            "audio/webm;codecs=opus"
+                        )
+                    ) {
+
+                        recorderOptions.mimeType =
+                            "audio/webm;codecs=opus";
+
+                    } else if (
+                        MediaRecorder.isTypeSupported(
+                            "audio/webm"
+                        )
+                    ) {
+
+                        recorderOptions.mimeType =
+                            "audio/webm";
+                    }
+
+
+                    mediaRecorder =
+                        new MediaRecorder(
+                            stream,
+                            recorderOptions
+                        );
+
+
+                    // ------------------------
+                    // AUDIO DATA
+                    // ------------------------
+
+                    mediaRecorder.addEventListener(
+                        "dataavailable",
+                        function (event) {
+
+                            if (
+                                event.data &&
+                                event.data.size > 0
+                            ) {
+
+                                audioChunks.push(
+                                    event.data
+                                );
+                            }
+                        }
+                    );
+
+
+                    // ------------------------
+                    // RECORDING STOP
+                    // ------------------------
+
+                    mediaRecorder.addEventListener(
+                        "stop",
+                        async function () {
+
+                            // Stop microphone
+
+                            stream
+                                .getTracks()
+                                .forEach(
+                                    function (track) {
+
+                                        track.stop();
+                                    }
+                                );
+
+
+                            if (
+                                audioChunks.length === 0
+                            ) {
+
+                                return;
+                            }
+
+
+                            // ------------------------
+                            // CREATE AUDIO FILE
+                            // ------------------------
+
+                            const mimeType =
+                                mediaRecorder.mimeType ||
+                                "audio/webm";
+
+
+                            const audioBlob =
+                                new Blob(
+                                    audioChunks,
+                                    {
+                                        type:
+                                            mimeType
+                                    }
+                                );
+
+
+                            // ------------------------
+                            // UPLOAD
+                            // ------------------------
+
+                            await uploadAudio(
+                                audioBlob,
+                                socket
+                            );
+                        }
+                    );
+
+
+                    // ------------------------
+                    // START RECORDING
+                    // ------------------------
+
+                    mediaRecorder.start();
+
+                    isRecording = true;
+
+                    audioButton.textContent =
+                        "⏹️";
+
+                    audioButton.title =
+                        "Stop recording";
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Microphone error:",
+                        error
+                    );
+
+                    alert(
+                        "Microphone permission was denied or unavailable."
+                    );
+                }
+            }
+        );
+    }
+
 
     // ====================================
     // LOGOUT
@@ -415,6 +642,96 @@ function startChat(
         );
 }
 
+
+// ========================================
+// UPLOAD AUDIO
+// ========================================
+
+async function uploadAudio(
+    audioBlob,
+    socket
+) {
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "file",
+        audioBlob,
+        "voice-message.webm"
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/upload",
+                {
+                    method:
+                        "POST",
+
+                    body:
+                        formData
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !data.success
+        ) {
+
+            alert(
+                data.message ||
+                "Audio upload failed."
+            );
+
+            return;
+        }
+
+
+        // =================================
+        // SEND AUDIO TO ROOM
+        // =================================
+
+        socket.emit(
+            "send-file",
+            {
+
+                url:
+                    data.url,
+
+                name:
+                    data.name,
+
+                type:
+                    data.type,
+
+                size:
+                    data.size
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Audio upload error:",
+            error
+        );
+
+        alert(
+            "Audio upload failed."
+        );
+    }
+}
+
+
 // ========================================
 // ADD TEXT MESSAGE
 // ========================================
@@ -429,22 +746,15 @@ function addTextMessage(
             "messages"
         );
 
+
     const div =
         document.createElement(
             "div"
         );
 
-    // ====================================
-    // IMPORTANT
-    // ====================================
-    //
-    // SAME BROWSER
-    //     = RIGHT
-    //
-    // OTHER BROWSER
-    //     = LEFT
-    //
-    // ====================================
+
+    // SAME BROWSER = RIGHT
+    // OTHER BROWSER = LEFT
 
     if (
         message.senderSocketId ===
@@ -460,6 +770,7 @@ function addTextMessage(
             "message";
     }
 
+
     // ====================================
     // NAME
     // ====================================
@@ -469,8 +780,10 @@ function addTextMessage(
             "strong"
         );
 
+
     sender.textContent =
         message.senderName;
+
 
     // ====================================
     // TEXT
@@ -481,8 +794,10 @@ function addTextMessage(
             "div"
         );
 
+
     text.textContent =
         message.text;
+
 
     // ====================================
     // TIME
@@ -493,13 +808,16 @@ function addTextMessage(
             "span"
         );
 
+
     time.className =
         "message-time";
+
 
     time.textContent =
         formatTime(
             message.time
         );
+
 
     // ====================================
     // ADD
@@ -517,12 +835,15 @@ function addTextMessage(
         time
     );
 
+
     container.appendChild(
         div
     );
 
+
     scrollMessages();
 }
+
 
 // ========================================
 // UPLOAD FILE
@@ -536,9 +857,11 @@ async function uploadFile(
     const file =
         input.files[0];
 
+
     if (!file) {
         return;
     }
+
 
     // ====================================
     // FILE SIZE
@@ -558,13 +881,16 @@ async function uploadFile(
         return;
     }
 
+
     const formData =
         new FormData();
+
 
     formData.append(
         "file",
         file
     );
+
 
     try {
 
@@ -580,8 +906,10 @@ async function uploadFile(
                 }
             );
 
+
         const data =
             await response.json();
+
 
         if (
             !data.success
@@ -593,6 +921,7 @@ async function uploadFile(
 
             return;
         }
+
 
         // =================================
         // SEND FILE TO ROOM
@@ -616,6 +945,7 @@ async function uploadFile(
             }
         );
 
+
     } catch (error) {
 
         console.error(
@@ -626,11 +956,13 @@ async function uploadFile(
             "File upload failed."
         );
 
+
     } finally {
 
         input.value = "";
     }
 }
+
 
 // ========================================
 // ADD FILE MESSAGE
@@ -646,10 +978,12 @@ function addFileMessage(
             "messages"
         );
 
+
     const div =
         document.createElement(
             "div"
         );
+
 
     // ====================================
     // SAME BROWSER = RIGHT
@@ -670,6 +1004,7 @@ function addFileMessage(
             "message";
     }
 
+
     // ====================================
     // NAME
     // ====================================
@@ -679,12 +1014,15 @@ function addFileMessage(
             "strong"
         );
 
+
     sender.textContent =
         file.senderName;
+
 
     div.appendChild(
         sender
     );
+
 
     // ====================================
     // IMAGE
@@ -702,17 +1040,59 @@ function addFileMessage(
                 "img"
             );
 
+
         image.src =
             file.url;
+
 
         image.alt =
             file.name;
 
+
         div.appendChild(
             image
         );
-
     }
+
+
+    // ====================================
+    // AUDIO MESSAGE
+    // ====================================
+
+    else if (
+        file.type &&
+        file.type.startsWith(
+            "audio/"
+        )
+    ) {
+
+        const audio =
+            document.createElement(
+                "audio"
+            );
+
+
+        audio.src =
+            file.url;
+
+
+        audio.controls =
+            true;
+
+
+        audio.preload =
+            "metadata";
+
+
+        audio.style.width =
+            "240px";
+
+
+        div.appendChild(
+            audio
+        );
+    }
+
 
     // ====================================
     // VIDEO
@@ -730,17 +1110,20 @@ function addFileMessage(
                 "video"
             );
 
+
         video.src =
             file.url;
+
 
         video.controls =
             true;
 
+
         div.appendChild(
             video
         );
-
     }
+
 
     // ====================================
     // OTHER FILE
@@ -753,20 +1136,25 @@ function addFileMessage(
                 "a"
             );
 
+
         link.href =
             file.url;
 
+
         link.target =
             "_blank";
+
 
         link.textContent =
             "📎 " +
             file.name;
 
+
         div.appendChild(
             link
         );
     }
+
 
     // ====================================
     // TIME
@@ -777,24 +1165,30 @@ function addFileMessage(
             "span"
         );
 
+
     time.className =
         "message-time";
+
 
     time.textContent =
         formatTime(
             file.time
         );
 
+
     div.appendChild(
         time
     );
+
 
     container.appendChild(
         div
     );
 
+
     scrollMessages();
 }
+
 
 // ========================================
 // TIME
@@ -818,6 +1212,7 @@ function formatTime(
     );
 }
 
+
 // ========================================
 // SCROLL
 // ========================================
@@ -829,6 +1224,8 @@ function scrollMessages() {
             "messages"
         );
 
+
     container.scrollTop =
         container.scrollHeight;
 }
+```
