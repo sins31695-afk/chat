@@ -1,158 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>Private Chat</title>
+    <title>Private Chat</title>
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-    <!-- FontAwesome for Icons -->
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    >
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
 
 <body>
 
-<div class="login-page" id="loginPage">
+<div class="login-page">
 
-    <div class="login-card">
+    <div class="login-card">
 
-        <div class="logo">
-            💬
-        </div>
+        <div class="logo">
+            💬
+        </div>
 
-        <h1>
-            Private Chat
-        </h1>
+        <h1>
+            Private Chat
+        </h1>
 
-        <p class="subtitle">
-            Enter your chat details
-        </p>
+        <p class="subtitle">
+            Enter your chat details
+        </p>
 
-        <form id="loginForm">
+        <form id="loginForm">
 
-            <label>
-                Name
-            </label>
+            <label>
+                Name
+            </label>
 
-            <input
-                id="userName"
-                type="text"
-                placeholder="Your name"
-                maxlength="30"
-                required
-            >
+            <input
+                id="userName"
+                type="text"
+                placeholder="Your name"
+                maxlength="30"
+                required
+            >
 
-            <label>
-                Chat ID
-            </label>
+            <label>
+                Chat ID
+            </label>
 
-            <input
-                id="userId"
-                type="text"
-                inputmode="numeric"
-                maxlength="8"
-                placeholder="4–8 digit ID"
-                required
-            >
+            <input
+                id="userId"
+                type="text"
+                inputmode="numeric"
+                maxlength="8"
+                placeholder="4–8 digit ID"
+                required
+            >
 
-            <label>
-                Password
-            </label>
+            <label>
+                Password
+            </label>
 
-            <input
-                id="password"
-                type="password"
-                placeholder="Password"
-                required
-            >
+            <input
+                id="password"
+                type="password"
+                placeholder="Password"
+                required
+            >
 
-            <button
-                type="submit"
-                id="loginButton"
-            >
-                Enter Chat
-            </button>
+            <button
+                type="submit"
+                id="loginButton"
+            >
+                Enter Chat
+            </button>
 
-        </form>
+        </form>
 
-        <p
-            id="loginError"
-            class="error"
-        ></p>
+        <p
+            id="loginError"
+            class="error"
+        ></p>
 
-        <div class="demo-info">
-            Use any 4–8 digit ID and password.
-            <br>
-            Use the same ID + password
-            on another device to join
-            the same chat.
-        </div>
+        <div class="demo-info">
+            Use any 4–8 digit ID and password.
+            <br>
+            Use the same ID + password
+            on another device to join
+            the same chat.
+        </div>
 
-    </div>
+    </div>
 
-</div>
-
-<!-- CHAT PAGE SECTION -->
-<div class="chat-page hidden" id="chatPage">
-    <div class="chat-header">
-        <div>
-            <h2>Chat ID: <span id="displayChatId"></span></h2>
-            <p>Logged in as: <span id="displayName"></span></p>
-        </div>
-        <button id="leaveBtn" class="leave-btn">Leave</button>
-    </div>
-
-    <div class="messages-container" id="messagesContainer">
-        <!-- Messages will be loaded here dynamically -->
-    </div>
-
-    <!-- RECORDING & MEDIA PREVIEW BAR -->
-    <div id="voicePreviewBar" class="preview-bar hidden">
-        <span id="previewText">🎙️ Voice Note Recorded</span>
-        <button id="cancelVoiceBtn" class="cancel-btn"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-
-    <div id="recordingStatus" class="recording-status hidden">
-        <span class="dot"></span> Recording... <span id="recordTimer">00:00</span>
-        <button id="stopCancelRecord" class="cancel-link">Cancel</button>
-    </div>
-
-    <form id="messageForm" class="chat-input-area">
-        <label for="mediaInput" class="icon-btn" title="Attach Photo/Video">
-            <i class="fa-solid fa-paperclip"></i>
-            <input type="file" id="mediaInput" accept="image/*,video/*" class="hidden-input">
-        </label>
-
-        <!-- Audio/Voice Message Button -->
-        <button type="button" id="voiceRecordBtn" class="icon-btn" title="Record Audio Message">
-            <i class="fa-solid fa-microphone" id="micIcon"></i>
-        </button>
-
-        <input
-            type="text"
-            id="messageInput"
-            placeholder="Type a message..."
-            autocomplete="off"
-        >
-
-        <button type="submit" id="sendBtn" class="send-btn">
-            <i class="fa-solid fa-paper-plane"></i>
-        </button>
-    </form>
 </div>
 
 <script src="app.js"></script>
