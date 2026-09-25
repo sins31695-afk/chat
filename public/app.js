@@ -1,4 +1,3 @@
-```javascript
 // ========================================
 // LOGIN
 // ========================================
@@ -108,6 +107,7 @@ if (loginForm) {
                     await fetch(
                         "/api/login",
                         {
+
                             method:
                                 "POST",
 
@@ -187,7 +187,6 @@ if (loginForm) {
     );
 }
 
-
 // ========================================
 // CHAT PAGE
 // ========================================
@@ -225,7 +224,6 @@ if (messages) {
         );
     }
 }
-
 
 // ========================================
 // START CHAT
@@ -322,6 +320,11 @@ function startChat(
 
             addTextMessage(
                 message,
+
+                // VERY IMPORTANT
+                // Send THIS browser's
+                // socket ID
+
                 socket.id
             );
         }
@@ -376,220 +379,13 @@ function startChat(
 
             addFileMessage(
                 file,
+
+                // THIS browser's socket
+
                 socket.id
             );
         }
     );
-
-
-    // ====================================
-    // AUDIO MESSAGE
-    // ====================================
-
-    const audioButton =
-        document.getElementById(
-            "audioButton"
-        );
-
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let recording = false;
-
-    if (audioButton) {
-
-        audioButton.addEventListener(
-            "click",
-            async function () {
-
-                // ----------------------------
-                // STOP RECORDING
-                // ----------------------------
-
-                if (recording) {
-
-                    mediaRecorder.stop();
-
-                    recording = false;
-
-                    audioButton.textContent =
-                        "🎤";
-
-                    audioButton.title =
-                        "Record audio";
-
-                    return;
-                }
-
-                // ----------------------------
-                // CHECK BROWSER SUPPORT
-                // ----------------------------
-
-                if (
-                    !navigator.mediaDevices ||
-                    !navigator.mediaDevices.getUserMedia
-                ) {
-
-                    alert(
-                        "Audio recording is not supported by this browser."
-                    );
-
-                    return;
-                }
-
-                if (
-                    !window.MediaRecorder
-                ) {
-
-                    alert(
-                        "Audio recording is not supported by this browser."
-                    );
-
-                    return;
-                }
-
-                try {
-
-                    // ----------------------------
-                    // MICROPHONE PERMISSION
-                    // ----------------------------
-
-                    const stream =
-                        await navigator.mediaDevices.getUserMedia(
-                            {
-                                audio: true
-                            }
-                        );
-
-                    audioChunks = [];
-
-                    // ----------------------------
-                    // CREATE RECORDER
-                    // ----------------------------
-
-                    let options = {};
-
-                    if (
-                        MediaRecorder.isTypeSupported(
-                            "audio/webm;codecs=opus"
-                        )
-                    ) {
-
-                        options.mimeType =
-                            "audio/webm;codecs=opus";
-
-                    } else if (
-                        MediaRecorder.isTypeSupported(
-                            "audio/webm"
-                        )
-                    ) {
-
-                        options.mimeType =
-                            "audio/webm";
-                    }
-
-                    mediaRecorder =
-                        new MediaRecorder(
-                            stream,
-                            options
-                        );
-
-                    // ----------------------------
-                    // AUDIO DATA
-                    // ----------------------------
-
-                    mediaRecorder.addEventListener(
-                        "dataavailable",
-                        function (event) {
-
-                            if (
-                                event.data &&
-                                event.data.size > 0
-                            ) {
-
-                                audioChunks.push(
-                                    event.data
-                                );
-                            }
-                        }
-                    );
-
-                    // ----------------------------
-                    // RECORDING FINISHED
-                    // ----------------------------
-
-                    mediaRecorder.addEventListener(
-                        "stop",
-                        async function () {
-
-                            // Stop microphone
-                            stream
-                                .getTracks()
-                                .forEach(
-                                    function (track) {
-                                        track.stop();
-                                    }
-                                );
-
-                            if (
-                                audioChunks.length === 0
-                            ) {
-
-                                return;
-                            }
-
-                            const mimeType =
-                                mediaRecorder.mimeType ||
-                                "audio/webm";
-
-                            const audioBlob =
-                                new Blob(
-                                    audioChunks,
-                                    {
-                                        type:
-                                            mimeType
-                                    }
-                                );
-
-                            // ----------------------------
-                            // SEND AUDIO
-                            // ----------------------------
-
-                            await uploadAudio(
-                                audioBlob,
-                                socket
-                            );
-                        }
-                    );
-
-                    // ----------------------------
-                    // START
-                    // ----------------------------
-
-                    mediaRecorder.start();
-
-                    recording = true;
-
-                    audioButton.textContent =
-                        "⏹️";
-
-                    audioButton.title =
-                        "Stop recording";
-
-                } catch (error) {
-
-                    console.error(
-                        "Microphone error:",
-                        error
-                    );
-
-                    alert(
-                        "Microphone permission was denied or unavailable."
-                    );
-                }
-            }
-        );
-    }
-
 
     // ====================================
     // LOGOUT
@@ -619,90 +415,6 @@ function startChat(
         );
 }
 
-
-// ========================================
-// UPLOAD AUDIO
-// ========================================
-
-async function uploadAudio(
-    audioBlob,
-    socket
-) {
-
-    const formData =
-        new FormData();
-
-    formData.append(
-        "file",
-        audioBlob,
-        "voice-message.webm"
-    );
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/upload",
-                {
-                    method:
-                        "POST",
-
-                    body:
-                        formData
-                }
-            );
-
-        const data =
-            await response.json();
-
-        if (
-            !data.success
-        ) {
-
-            alert(
-                data.message ||
-                "Audio upload failed."
-            );
-
-            return;
-        }
-
-        // =================================
-        // SEND AUDIO TO ROOM
-        // =================================
-
-        socket.emit(
-            "send-file",
-            {
-
-                url:
-                    data.url,
-
-                name:
-                    data.name,
-
-                type:
-                    data.type,
-
-                size:
-                    data.size
-            }
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Audio upload error:",
-            error
-        );
-
-        alert(
-            "Audio upload failed."
-        );
-    }
-}
-
-
 // ========================================
 // ADD TEXT MESSAGE
 // ========================================
@@ -722,8 +434,17 @@ function addTextMessage(
             "div"
         );
 
-    // SAME BROWSER = RIGHT
-    // OTHER BROWSER = LEFT
+    // ====================================
+    // IMPORTANT
+    // ====================================
+    //
+    // SAME BROWSER
+    //     = RIGHT
+    //
+    // OTHER BROWSER
+    //     = LEFT
+    //
+    // ====================================
 
     if (
         message.senderSocketId ===
@@ -802,7 +523,6 @@ function addTextMessage(
 
     scrollMessages();
 }
-
 
 // ========================================
 // UPLOAD FILE
@@ -912,7 +632,6 @@ async function uploadFile(
     }
 }
 
-
 // ========================================
 // ADD FILE MESSAGE
 // ========================================
@@ -932,8 +651,10 @@ function addFileMessage(
             "div"
         );
 
+    // ====================================
     // SAME BROWSER = RIGHT
     // OTHER BROWSER = LEFT
+    // ====================================
 
     if (
         file.senderSocketId ===
@@ -965,7 +686,6 @@ function addFileMessage(
         sender
     );
 
-
     // ====================================
     // IMAGE
     // ====================================
@@ -991,8 +711,8 @@ function addFileMessage(
         div.appendChild(
             image
         );
-    }
 
+    }
 
     // ====================================
     // VIDEO
@@ -1019,39 +739,8 @@ function addFileMessage(
         div.appendChild(
             video
         );
+
     }
-
-
-    // ====================================
-    // AUDIO MESSAGE
-    // ====================================
-
-    else if (
-        file.type &&
-        file.type.startsWith(
-            "audio/"
-        )
-    ) {
-
-        const audio =
-            document.createElement(
-                "audio"
-            );
-
-        audio.src =
-            file.url;
-
-        audio.controls =
-            true;
-
-        audio.preload =
-            "metadata";
-
-        div.appendChild(
-            audio
-        );
-    }
-
 
     // ====================================
     // OTHER FILE
@@ -1078,7 +767,6 @@ function addFileMessage(
             link
         );
     }
-
 
     // ====================================
     // TIME
@@ -1108,7 +796,6 @@ function addFileMessage(
     scrollMessages();
 }
 
-
 // ========================================
 // TIME
 // ========================================
@@ -1131,7 +818,6 @@ function formatTime(
     );
 }
 
-
 // ========================================
 // SCROLL
 // ========================================
@@ -1146,4 +832,3 @@ function scrollMessages() {
     container.scrollTop =
         container.scrollHeight;
 }
-```
